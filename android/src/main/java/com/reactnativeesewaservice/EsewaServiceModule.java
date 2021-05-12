@@ -7,12 +7,16 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import android.os.Bundle;
+
 import com.esewa.android.sdk.payment.ESewaConfiguration;
 import com.esewa.android.sdk.payment.ESewaPayment;
 import com.esewa.android.sdk.payment.ESewaPaymentActivity;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.BaseActivityEventListener;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -70,40 +74,26 @@ public class EsewaServiceModule extends ReactContextBaseJavaModule {
   private final ActivityEventListener mActivityEventListener = new BaseActivityEventListener() {
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+      if (requestCode == 1) {
+        if (esewaPromise != null) {
+          if (resultCode == Activity.RESULT_CANCELED) {
+            esewaPromise.reject("PAYMENT_ERROR", "Payment was unsuccessful");
+          } else if (resultCode == Activity.RESULT_OK) {
+            String result = data.getStringExtra(ESewaPayment.EXTRA_RESULT_MESSAGE);
+            Bundle bundle = data.getExtras();
 
-      try {
-        if (requestCode == REQUEST_CODE_PAYMENT) {
-          Activity currentActivity = getCurrentActivity();
-
-          if (resultCode == Activity.RESULT_OK) {
-            if (data == null) {
-              throw new Exception();
-            }
-            String message = data.getStringExtra(ESewaPayment.EXTRA_RESULT_MESSAGE);
-            Log.i(TAG, "Proof of Payment " + message);
-            Toast.makeText(currentActivity, "SUCCESSFUL PAYMENT", Toast.LENGTH_SHORT).show();
-            esewaPromise.resolve(resultCode);
+            WritableMap map = Arguments.createMap();
+            map.putString("response", result);
+           
+            esewaPromise.resolve(map);
+          } else if(resultCode == ESewaPayment.RESULT_EXTRAS_INVALID){
+            String s = data.getStringExtra(ESewaPayment.EXTRA_RESULT_MESSAGE);
+            esewaPromise.reject("PAYMENT_ERROR", s);
           }
 
-          else if (resultCode == Activity.RESULT_CANCELED) {
-            Toast.makeText(currentActivity, "Canceled By User", Toast.LENGTH_SHORT).show();
-            esewaPromise.resolve(resultCode);
-          }
-
-          else if (resultCode == ESewaPayment.RESULT_EXTRAS_INVALID) {
-            if (data == null) {
-              throw new Exception();
-            }
-            String message = data.getStringExtra(ESewaPayment.EXTRA_RESULT_MESSAGE);
-            Log.i(TAG, "Proof of Payment " + message);
-            esewaPromise.resolve(resultCode);
-          }
-
-          esewaPromise.reject("Unkonwn Esewa Error", new Exception());
+          esewaPromise = null;
         }
-      } catch(Exception e) {
-        esewaPromise.reject("Esewa Error", e);
       }
     }
-  };
+};
 }

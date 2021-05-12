@@ -4,7 +4,7 @@ type Options = "test" | "live" | "local";
 
 type EsewaServiceType = {
   init(clientId: string, secret: string, environment: Options): void;
-  makePayment(price: string, productName: string, productId: string, callbackUrl: string): void;
+  makePayment(price: string, productName: string, productId: string, callbackUrl: string): Promise<string>;
 };
 
 const { Esewa } = NativeModules;
