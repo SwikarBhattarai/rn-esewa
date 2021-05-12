@@ -17,7 +17,7 @@ import Esewa from "react-native-esewa-service";
 // ...
 
 Esewa.init(CLIENT_ID, SECRET, ENVIRONMENT)
-Esewa.makePayment(PRICE, PRODUCT_NAME, PRODUCT_ID, CALLBACK_URL)
+Esewa.makePayment(PRICE, PRODUCT_NAME, PRODUCT_ID, CALLBACK_URL) -- It returns a promise
 
 ```
 
